@@ -12,4 +12,6 @@ import com.jinu.interview.model.Candidate;
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 	@Query("SELECT c FROM Candidate c WHERE c.status = :status")
     public List<Candidate> getCandidateByStatus(@Param("status") String status);
+	
+	public Candidate findByEmail(@Param("email") String email);
 }

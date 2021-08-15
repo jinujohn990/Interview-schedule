@@ -18,14 +18,12 @@ public class SwaggerConfig extends WebMvcConfigurerAdapter {
 	@Bean
 	public Docket api() {
 		return new Docket(DocumentationType.SWAGGER_2).select()
-				//.apis(RequestHandlerSelectors.any())
-				.apis(RequestHandlerSelectors.basePackage("com.oracle.interview"))
+				.apis(RequestHandlerSelectors.basePackage("com.jinu.interview"))
 				.paths(PathSelectors.any()).build();
 	}
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		// enabling swagger-ui part for visual documentation
 		registry.addResourceHandler("swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
 		registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
 	}

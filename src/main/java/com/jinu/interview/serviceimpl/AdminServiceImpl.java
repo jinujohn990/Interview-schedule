@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -47,26 +49,30 @@ public class AdminServiceImpl implements AdminService {
 		logger.info("Entering addUser");
 		Response response;
 		try {
+			validateUserRequest(request);
 			User user = null;
 			List<UserRoles> userRoles = null;
 
 			user = userRepository.getUserByUsername(request.getUsername());
 			if (user != null) {
-				response = createResponse("fail","userId already exists");
+				response = createResponse("fail", "userId already exists");
 				return response;
 			}
 			user = createUserEnityFromDTO(request);
 			user = userRepository.save(user);
-			userRoles = ceateUserRoles(request,user);			
+			userRoles = ceateUserRoles(request, user);
 			userRolesRepository.saveAll(userRoles);
 			response = createResponse("success", "User created with id :" + user.getUserId());
 		} catch (Exception e) {
+			logger.error("Error in processing",e);
 			response = createResponse("fail", e.getMessage());
 		}
 		logger.info("Exiting addUser");
 		return response;
 
 	}
+
+	
 
 	private List<UserRoles> ceateUserRoles(AddUserRequest request,User user) {
 		logger.info("Entering addUser");
@@ -95,6 +101,7 @@ public class AdminServiceImpl implements AdminService {
 		logger.info("Entering addCandidate");
 		Response response;
 		try {
+			validateCandidate(request);
 			Candidate candidate = new Candidate();
 			candidate.setName(request.getName());
 			candidate.setEmail(request.getEmail());
@@ -138,6 +145,7 @@ public class AdminServiceImpl implements AdminService {
 				return response;
 			}
 		} catch (Exception e) {
+			logger.error("Error in processing",e);
 			response = createResponse("fail", e.getMessage());
 		}
 		logger.info("Exiting addCandidate");
@@ -189,5 +197,30 @@ public class AdminServiceImpl implements AdminService {
 		Response response = new Response(status,message);
 		logger.info("Exiting createResponse");
 		return response;
+	}
+	private void validateUserRequest(AddUserRequest request) throws Exception {
+		User user = userRepository.getUserByUsername(request.getUsername());
+		if(user!= null) {
+			throw new Exception("username is already present");
+		}
+	}
+	private void validateCandidate(AddCandidateRequest request) throws Exception {
+		Candidate candidate = candidateRepository.findByEmail(request.getEmail());
+		if(candidate!= null) {
+			throw new Exception("Candidate is already registered");
+		}
+		if(request.getInterviewerId() != null && !request.getInterviewerId().isEmpty()) {
+			String regex = "[0-9]+";
+	        Pattern p = Pattern.compile(regex);
+	        Matcher m = p.matcher(request.getInterviewerId());
+	        if(!m.matches()) {
+	        	throw new Exception("Interviewer Id is not an integer");
+	        }
+			Optional<Interviewer> interviewer = interviewerRepository.findById(Long.parseLong(request.getInterviewerId()));
+			if(!interviewer.isPresent()) {
+				throw new Exception("Interviewer is not present");
+			}
+		}
+		
 	}
 }
